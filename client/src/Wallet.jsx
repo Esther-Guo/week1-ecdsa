@@ -10,12 +10,13 @@ function Wallet({ address, setAddress, balance, setBalance, privateKey, setPriva
     setPrivateKey(privateKey);
 
     const publicKey = secp256k1.getPublicKey(privateKey);
-    setAddress(bytesToHex(keccak256(publicKey.slice(1)).slice(-20)));
+    const curAddress = bytesToHex(keccak256(publicKey.slice(1)).slice(-20))
+    setAddress(curAddress);
 
     if (privateKey) {
       const {
         data: { balance },
-      } = await server.get(`balance/${privateKey}`);
+      } = await server.get(`balance/${curAddress}`);
       setBalance(balance);
     } else {
       setBalance(0);
