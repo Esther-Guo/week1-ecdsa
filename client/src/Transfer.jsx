@@ -1,7 +1,7 @@
 import { useState } from "react";
 import server from "./server";
 import { secp256k1 } from "ethereum-cryptography/secp256k1";
-import { utf8ToBytes } from "ethereum-cryptography/utils";
+import { bytesToHex, utf8ToBytes } from "ethereum-cryptography/utils";
 import { sha256 } from "ethereum-cryptography/sha256";
 
 function Transfer({ address, setBalance, privateKey }) {
@@ -13,13 +13,19 @@ function Transfer({ address, setBalance, privateKey }) {
   async function transfer(evt) {
     evt.preventDefault();
 
-    const msgHash = sha256(utf8ToBytes(sendAmount));
+    const msgHash = bytesToHex(sha256(utf8ToBytes(sendAmount+Date.now()))); // Q:does it matter to put what info in msg? I guess not
+    const signature = secp256k1.sign(msgHash, privateKey);
     try {
       const {
         data: { balance },
       } = await server.post(`send`, {
-        // sender: privateKey,
-        signature: secp256k1.sign(msgHash, privateKey), // TypeError: Do not know how to serialize a BigInt
+        sender: address,
+        publicKey: bytesToHex(secp256k1.getPublicKey(privateKey)),
+        signature: JSON.stringify({
+          ...signature,
+          r: signature.r.toString(),
+          s: signature.s.toString()
+        }),
         msgHash,
         amount: parseInt(sendAmount),
         recipient,

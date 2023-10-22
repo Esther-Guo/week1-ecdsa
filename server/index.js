@@ -3,6 +3,10 @@ const app = express();
 const cors = require("cors");
 const port = 3042;
 
+const { secp256k1 } = require("ethereum-cryptography/secp256k1");
+const { hexToBytes } = require("ethereum-cryptography/utils");
+
+
 app.use(cors());
 app.use(express.json());
 
@@ -15,6 +19,9 @@ const balances = {
   "6427cce8b55e73c229a5e30bc82539738e076e10": 75,
 };
 
+// fa15dbeea912a3ccd076284746c5f9459324ccfa1a7c958be9fc5db0b7b8eafc
+// 2e8236fe0af9eed2790e8473de33f522cfd99f29
+
 app.get("/balance/:address", (req, res) => {
   const { address } = req.params;
   const balance = balances[address] || 0;
@@ -22,22 +29,26 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.post("/send", (req, res) => {
-  // get signature from client
-  // recover public key to replace sender
+  const { sender, publicKey, signature, msgHash, recipient, amount } = req.body;
 
-  const { signature, msgHash, recipient, amount } = req.body;
+  // recover original signature
+  const sigObj = JSON.parse(signature);
+  const recoverSig = new secp256k1.Signature(BigInt(sigObj.r), BigInt(sigObj.s), sigObj.recovery);
 
-  const sender = signature.recoverPublicKey(msgHash)
+  // console.log(secp256k1.verify(recoverSig, msgHash, hexToBytes(publicKey)));
 
-  setInitialBalance(sender);
-  setInitialBalance(recipient);
-
-  if (balances[sender] < amount) {
-    res.status(400).send({ message: "Not enough funds!" });
-  } else {
-    balances[sender] -= amount;
-    balances[recipient] += amount;
-    res.send({ balance: balances[sender] });
+  if (!secp256k1.verify(recoverSig, msgHash, hexToBytes(publicKey))) res.status(400).send({ message: "Verification failed!" });
+  else {
+    setInitialBalance(sender);
+    setInitialBalance(recipient);
+  
+    if (balances[sender] < amount) {
+      res.status(400).send({ message: "Not enough funds!" });
+    } else {
+      balances[sender] -= amount;
+      balances[recipient] += amount;
+      res.send({ balance: balances[sender] });
+    }
   }
 });
 
