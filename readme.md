@@ -29,3 +29,8 @@ The server folder contains a node.js server using [express](https://expressjs.co
 The application should connect to the default server port (3042) automatically! 
 
 _Hint_ - Use [nodemon](https://www.npmjs.com/package/nodemon) instead of `node` to automatically restart the server on any changes.
+
+## Takeaways
+1. This project simplifies the process by let user enter their private key on the website, so that the client side can run code to generate signature. But usually this signing process should be carried out by wallet.
+2. On the server side, it will receive `signature`, `msgHash`, `publicKey` etc. EXCEPT the private key. And with the info received, it is able to verify if the signature is signed by the person who owns the associated address, using `secp256k1.verify` method.
+3. Q: I still can't think of a way to detect if someone has intercepted the transfered data and resent them again. Clearly only verification is not enough.
