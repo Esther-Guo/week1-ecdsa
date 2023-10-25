@@ -33,4 +33,9 @@ _Hint_ - Use [nodemon](https://www.npmjs.com/package/nodemon) instead of `node` 
 ## Takeaways
 1. This project simplifies the process by let user enter their private key on the website, so that the client side can run code to generate signature. But usually this signing process should be carried out by wallet.
 2. On the server side, it will receive `signature`, `msgHash`, `publicKey` etc. EXCEPT the private key. And with the info received, it is able to verify if the signature is signed by the person who owns the associated address, using `secp256k1.verify` method.
-3. Q: I still can't think of a way to detect if someone has intercepted the transfered data and resent them again. Clearly only verification is not enough.
+3. Q: I still can't think of a way to detect if someone has intercepted the transfered data and resent them again. Clearly only verification is not enough.  
+
+**Update**: thanks for the help from @NakamotoNomad, his solution to the problem is add a valid-once consensys between client and server.   
+To be specific, before client signs the tx, it first asks the server for a challenge, which includes a timestamp and a nonce. Server will also store the nonce. Then client will sign a message that contains the nonce and send back the exact challenge and corresponding signature.  
+At server side, it will validate the signature and the nonce in challenge exists in its database. Once the tx is verified, the nonce will be discarded to avoid replay attack.  
+For code implementation, check [this repo](https://github.com/NakamotoNomad/ecdsa-node).

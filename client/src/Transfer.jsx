@@ -13,7 +13,7 @@ function Transfer({ address, setBalance, privateKey }) {
   async function transfer(evt) {
     evt.preventDefault();
 
-    const msgHash = bytesToHex(sha256(utf8ToBytes(sendAmount+Date.now()))); // Q:does it matter to put what info in msg? I guess not
+    const msgHash = bytesToHex(sha256(utf8ToBytes(sendAmount+Date.now()))); // Q:does it matter to put what info in msg? I guess not // A: it matters if we adopt the consensys solution mentioned in readme.
     const signature = secp256k1.sign(msgHash, privateKey);
     try {
       const {
